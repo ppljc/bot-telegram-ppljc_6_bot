@@ -1,6 +1,9 @@
 # <---------- Python modules ---------->
 from aiogram import types, Router, F
 from aiogram.types import KeyboardButton, InlineKeyboardButton, ReplyKeyboardMarkup, InlineKeyboardMarkup, ReplyKeyboardRemove
+from aiogram.filters import StateFilter
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.fsm.context import FSMContext
 
 
 # <---------- Local modules ---------->
@@ -10,6 +13,13 @@ from utilities import ut_logger, ut_filters
 
 # <---------- Variables ---------->
 filename = 'commands.py'
+
+
+# <---------- FSM machine ---------->
+class FSMAddTask(StatesGroup):
+	name = State()
+	link = State()
+	time = State()
 
 
 # <---------- Start/help commands ---------->
@@ -44,7 +54,55 @@ async def message_commandStartOrHelp(message: types.Message):
 	await ut_logger.create_log(
 		id=message.from_user.id,
 		filename=filename,
-		function='message_commandStartOrHelp_registered',
+		function='message_commandStartOrHelp',
+		exception=exception,
+		content=content
+	)
+
+
+async def callback_query_addTaskName(callback_query: types.CallbackQuery, state: FSMContext):
+	try:
+		await callback_query.answer()
+		await callback_query.message.answer(
+			text=(
+				"Укажи название для своего нового напоминания:\n"
+				"<i>Оно должно быть уникальным</i>"
+			)
+		)
+		await callback_query.message.delete()
+		await state.set_state(FSMAddTask.name)
+		exception = ''
+		content = ''
+	except Exception as exc:
+		exception = exc
+		content = ''
+	await ut_logger.create_log(
+		id=callback_query.from_user.id,
+		filename=filename,
+		function='callback_query_addTaskName',
+		exception=exception,
+		content=content
+	)
+
+
+async def callback_query_addTaskTime(callback_query: types.CallbackQuery, state: FSMContext):
+	try:
+		await callback_query.answer()
+		await callback_query.message.answer(
+			text=(
+				"Укажи время для своего нового напоминания:\n"
+				"<i>Имеется ввиду, через сколько будет срабатывать напоминание</i>"
+			)
+		)
+		exception = ''
+		content = ''
+	except Exception as exc:
+		exception = exc
+		content = ''
+	await ut_logger.create_log(
+		id=callback_query.from_user.id,
+		filename=filename,
+		function='callback_query_addTaskTime',
 		exception=exception,
 		content=content
 	)
